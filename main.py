@@ -150,7 +150,7 @@ class vllm_experiment:
         mns = mns_cfg["default"]
         mnbt = mnbt_cfg["default"]
         rr = rr_cfg["default"]
-        if mns > mnbt:
+        if mnbt != None and mns > mnbt:
             mns = mnbt
         result_txt = self.item_test(chunked_prefill, mns, mnbt, rr)
 

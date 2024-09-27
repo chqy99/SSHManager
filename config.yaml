@@ -1,0 +1,101 @@
+ssh_setting:
+  ip: 'bj.caip.cambricon.com'
+  port: '31096'
+  username: 'root'
+  # 'chenqiyang'
+  password: '9g3las9chnb4'
+  prompt: '# '
+  # '$ '
+
+# 服务器端 ssh 命令
+server_config:
+  pre_cmds:
+    # - 'docker exec -it chqy_vllm1 /bin/bash'
+    # - 'cd /tmp'
+    - 'cd /workspace/volume/chenqiyang/vllm_test'
+    - 'export VLLM_SCHEDULER_PROFILE=true'
+  post_cmds:
+    - '\x03'
+  app_ip: '0.0.0.0'
+  app_port: 8181
+
+# 客户端 ssh 命令
+client_config:
+  pre_cmds:
+    # - 'docker exec -it chqy_vllm1 /bin/bash'
+    # - 'cd /chenqiyang/competitive_proj/vllm/benchmarks'
+    - 'cd /workspace/volume/chenqiyang/vllm/benchmarks'
+  post_cmds:
+    # - '\x04'
+    # - 'docker cp chqy_vllm1:/tmp /home/chenqiyang/'
+    # - 'docker exec -it chqy_vllm1 /bin/bash'
+  utils_path: '/workspace/volume/chenqiyang/vllm/tools/utils/post_scheduler_view_action.py'
+
+models_folder: '/workspace/volume/soft-data'
+models:
+  # Meta-Llama-3-8B-Instruct:
+  #   repath: '/AE/llm/models/Meta-Llama-3-8B-Instruct'
+  #   tp: 1
+  # chatglm3-6b:
+  #   repath: '/AE/llm/models/chatglm3-6b'
+  #   tp: 1
+  Baichuan2-13B-Chat:
+    repath: '/AE/llm/models/Baichuan2-13B-Chat'
+    tp: 2
+  # Qwen1.5-32B-Chat:
+  #   repath: '/AE/llm/models/Qwen1.5-32B-Chat'
+  #   tp: 4
+  # Meta-Llama-3-70B:
+  #   repath: '/AE/llm/models/Meta-Llama-3-70B'
+  #   tp: 8
+
+datasets_folder: '/workspace/volume/chenqiyang'
+datasets:
+  sharegpt:
+    repath: '/datasets/sharegpt/ShareGPT_V3_unfiltered_cleaned_split.json'
+  GSM:
+    repath: '/datasets/gsm/train.jsonl'
+
+params:
+  num-prompts: 100
+  disable_chunked_prefill:
+    max_num_seqs:
+      default: 32
+      step_num: 16
+      min_step_num: 4
+      bound: [4, 512]
+    # 若有值，max_model_len 必须和 max_num_batched_tokens 相等
+    max_num_batched_tokens:
+      default: null
+      step_num: null
+      min_step_num: null
+      bound: [null, null]
+    request-rate:
+      default: 4
+      step_num: 1
+      min_step_num: 0.5
+      bound: [1, 20]
+  enable_chunked_prefill:
+    max_num_seqs:
+      default: 256
+      step_num: 64
+      min_step_num: 16
+      bound: [16, 1024]
+    max_num_batched_tokens:
+      default: 512
+      step_num: 256
+      min_step_num: 128
+      bound: [128, 2048]
+    request-rate:
+      default: 10
+      step_num: 2
+      min_step_num: 0.5
+      bound: [1, 50]
+
+limitation:
+  ttft_p99_limit: 3000
+  tpot_p99_limit: 100
+  tpop_lower_limit: 50
+  batch_lower_limit: 50
+  block_lower_limit: 5
+  opti_loss_limit: 4

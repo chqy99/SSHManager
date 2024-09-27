@@ -14,6 +14,7 @@ server_config:
     # - 'cd /tmp'
     - 'cd /workspace/volume/chenqiyang/vllm_test'
     - 'export VLLM_SCHEDULER_PROFILE=true'
+    - 'export VLLM_WORKER_MULTIPROC_METHOD=spawn'
   post_cmds:
     - '\x03'
   app_ip: '0.0.0.0'

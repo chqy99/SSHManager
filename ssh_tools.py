@@ -12,6 +12,7 @@ class SSHManager:
         self.final_prompt = final_prompt
         self.ssh_name = ssh_name
         self.ssh = None
+        self.sftp = None
         self.channel = None
         self.threads = {} # 保存线程实例
         self.connect()
@@ -20,13 +21,16 @@ class SSHManager:
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(self.ip, self.port, self.username, self.password)
+        self.sftp = self.ssh.open_sftp()
         self.channel = self.ssh.invoke_shell()
         self.channel.settimeout(3)
         print(self.ssh_name, "ssh connect")
+        # 连接命令的缓冲区立即读取
+        self.read_until_prompt(self.final_prompt)
 
     def execute_command(self, command):
         print(self.ssh_name, command)
-        self.channel.send(command + "\r\n")
+        self.channel.send(command + "\r")
 
     # 阻塞式读取
     # prompt，读取到指定字符串时停止
@@ -58,12 +62,12 @@ class SSHManager:
                 # 超时检测
                 if time.time() - last_recv_time >= once_max_wait:
                     print(self.ssh_name, "Reached once_max_wait")
-                    return False, output
-                # 出现错误流时，默认返回
+                    return output
+                # 出现错误流时，抛出异常
                 if self.channel.recv_stderr_ready():
                     print(self.ssh_name, "an error occurred")
                     print(self.channel.recv_stderr(buffer_size))
-                    return False, output
+                    raise RuntimeError(self.ssh_name)
 
             buffer += self.channel.recv(buffer_size)
             last_recv_time = time.time()
@@ -87,7 +91,7 @@ class SSHManager:
             if prompt and prompt in output:
                 break
 
-        return True, output
+        return output
 
     def execute_command_wait_finish(self,
                                     command,
@@ -97,7 +101,7 @@ class SSHManager:
                                     buffer_size=1024,
                                     interval=1):
         print(self.ssh_name, command)
-        self.channel.send(command + "\r\n")
+        self.channel.send(command + "\r")
         return self.read_until_prompt(self.final_prompt, max_duration, once_max_wait,
                                       show_log, buffer_size, interval)
 
@@ -134,8 +138,30 @@ class SSHManager:
         else:
             print(f"Thread {thread_name} not found")
 
+    def download_file(self, remote_path, local_path):
+        try:
+            print(f"下载文件: {remote_path} 到 {local_path}")
+            self.sftp.get(remote_path, local_path)
+            print(f"成功下载: {remote_path}")
+        except Exception as e:
+            import sys
+            print(f"下载文件失败: {remote_path}. 错误: {e}", file=sys.stderr)
+
+    def download_directory(self, remote_dir, local_dir):
+        import os
+        import stat
+        os.makedirs(local_dir, exist_ok=True)
+        for entry in self.sftp.listdir_attr(remote_dir):
+            remote_path = os.path.join(remote_dir, entry.filename)
+            local_path = os.path.join(local_dir, entry.filename)
+            if stat.S_ISDIR(entry.st_mode):
+                self.download_directory(remote_path, local_path)
+            else:
+                self.download_file(remote_path, local_path)
+
     def close(self):
         if self.ssh:
+            self.sftp.close()
             self.ssh.close()
             print(self.ssh_name, "ssh close")
             self.ssh = None

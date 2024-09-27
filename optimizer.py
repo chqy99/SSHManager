@@ -202,7 +202,7 @@ class OptiPlan:
         if self.exist([mns, mnbt, rr]):
             return False, 0, 0, 0
         # mnbt 不小于 mns
-        if mns > mnbt:
+        if mnbt != None and mns > mnbt:
                 mns = mnbt
         return flag, mns, mnbt, rr
 

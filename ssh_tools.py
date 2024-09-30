@@ -42,7 +42,7 @@ class SSHManager:
     def read_until_prompt(self,
                           prompt,
                           max_duration=3600,
-                          once_max_wait = 60,
+                          once_max_wait = 360,
                           show_log=False,
                           buffer_size=1024,
                           interval=1):
@@ -96,7 +96,7 @@ class SSHManager:
     def execute_command_wait_finish(self,
                                     command,
                                     max_duration=3600,
-                                    once_max_wait = 60,
+                                    once_max_wait = 360,
                                     show_log=False,
                                     buffer_size=1024,
                                     interval=1):

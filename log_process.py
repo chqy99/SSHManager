@@ -94,11 +94,11 @@ def extract_logs(folder_path, output_path):
             if 'log.txt' != name:
                 continue
             file_path = os.path.join(root, name)
-            tmp = file_path.split('output')[1].split('/')
+            tmp = file_path.split(folder_path)[1].split('/')
             model_name = tmp[1]
             dataset_name = tmp[2]
-            enable_chunked = tmp[3]
-            num_prompts = tmp[4]
+            num_prompts = tmp[3]
+            enable_chunked = tmp[4]
             mns, mnbt, rr = tmp[5].split('_')
             if enable_chunked == "disable_chunked":
                 mnbt = None
@@ -129,4 +129,4 @@ def extract_logs(folder_path, output_path):
             outfile.write(write_str)
 
 if __name__ == "__main__":
-    extract_logs('output', 'output/table.csv')
+    extract_logs('2-A100', '2-A100/table.csv')

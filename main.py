@@ -46,11 +46,11 @@ class vllm_experiment:
 
         if server_config["pre_cmds"] != None:
             for cmd in server_config["pre_cmds"]:
-                self.server_ssh.execute_command_wait_finish(cmd, max_duration=3)
+                self.server_ssh.execute_command(cmd, max_duration=3)
 
         if client_config["pre_cmds"] != None:
             for cmd in client_config["pre_cmds"]:
-                self.client_ssh.execute_command_wait_finish(cmd, max_duration=3)
+                self.client_ssh.execute_command(cmd, max_duration=3)
 
     # mns means max_num_seqs
     # mnbt means max_num_batched_tokens
@@ -82,7 +82,7 @@ class vllm_experiment:
         if chunked_prefill:
             server_cmd += " --enable_chunked_prefill --max_num_batched_tokens=" + str(mnbt)
 
-        self.server_ssh.execute_command(server_cmd)
+        self.server_ssh.execute_command_async(server_cmd)
         self.server_ssh.read_until_prompt("Uvicorn running on", show_log=True)
         print("\nserver launched\n")
 
@@ -94,7 +94,7 @@ class vllm_experiment:
                     str(self.num_prompts) + " --request-rate=" + str(rr) + \
                     " --host " + app_ip + " --port " + str(app_port)
 
-        self.client_ssh.execute_command(client_cmd)
+        self.client_ssh.execute_command_async(client_cmd)
         # 必须马上读取，否则服务器端有过多的日志，使得缓冲区堵塞，会导致程序卡住
         thread_num = self.server_ssh.start_recv_thread()
         log_data = self.client_ssh.read_until_prompt(prompt, show_log=True)
@@ -106,7 +106,7 @@ class vllm_experiment:
         # 额外信息抓取
         client_cmd = "python3 " + client_config["utils_path"] + " --host " + \
                     app_ip + " --port " + str(app_port) + " --action save"
-        log_data = self.client_ssh.execute_command_wait_finish(client_cmd)
+        log_data = self.client_ssh.execute_command(client_cmd)
 
         # 只存储 vLLM scheduler profiling save... 之后的字符
         log_data = self.server_ssh.read_until_prompt("vLLM scheduler profiling save...") \
@@ -122,11 +122,11 @@ class vllm_experiment:
     def post_handle(self, item_folder):
         if server_config["post_cmds"] != None:
             for cmd in server_config["post_cmds"]:
-                self.server_ssh.execute_command_wait_finish(cmd, max_duration=3)
+                self.server_ssh.execute_command(cmd, max_duration=3)
 
         if client_config["post_cmds"] != None:
             for cmd in client_config["post_cmds"]:
-                self.client_ssh.execute_command_wait_finish(cmd, max_duration=3)
+                self.client_ssh.execute_command(cmd, max_duration=3)
 
         # 远端文件下载到本地
         self.client_ssh.download_directory("/workspace/volume/chenqiyang/vllm_test", item_folder)

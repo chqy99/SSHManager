@@ -229,11 +229,11 @@ class OptiPlan:
 
         # 如果调优后结果变差
         if len(self.eva_list) > 1 and \
-            self.eva_list[-2] > self.eva_list[-1]:
-            # 沿用上一次调优方向，重新调优
-            opti = self.opti_dir_list[-1]
+            self.eva_list[self.best_idx] > self.eva_list[-1]:
+            # 沿用最优次的调优方向，重新调优
+            opti = self.opti_dir_list[self.best_idx]
             self.opti_dir_list.append(opti)
-            return self.Choose_next_by_dir(cur_idx - 1)
+            return self.Choose_next_by_dir(self.best_idx)
         else:
             if self.chunked_prefill:
                 opti = self.get_opti_dir2(input_params, client_res,

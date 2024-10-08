@@ -28,10 +28,6 @@ class SSHManager:
         # 连接命令的缓冲区立即读取
         self.read_until_prompt(self.final_prompt)
 
-    def execute_command(self, command):
-        print(self.ssh_name, command)
-        self.channel.send(command + "\r")
-
     # 阻塞式读取
     # prompt，读取到指定字符串时停止
     # max_duration，该命令最长执行时间(s)
@@ -93,17 +89,22 @@ class SSHManager:
 
         return output
 
-    def execute_command_wait_finish(self,
-                                    command,
-                                    max_duration=3600,
-                                    once_max_wait = 360,
-                                    show_log=False,
-                                    buffer_size=1024,
-                                    interval=1):
+    def execute_command(self,
+                        command,
+                        max_duration=3600,
+                        once_max_wait = 360,
+                        show_log=False,
+                        buffer_size=1024,
+                        interval=1):
         print(self.ssh_name, command)
         self.channel.send(command + "\r")
         return self.read_until_prompt(self.final_prompt, max_duration, once_max_wait,
                                       show_log, buffer_size, interval)
+
+    # 可以搭配线程使用，防止缓冲区堵塞
+    def execute_command_async(self, command):
+        print(self.ssh_name, command)
+        self.channel.send(command + "\r")
 
     # server 端一直运行，需要靠线程实现非阻塞式地读取缓冲区，否则缓冲区堵塞会造成错误
     def start_recv_thread(self, max_duration=3600, buffer_size=4096, interval=0.1):

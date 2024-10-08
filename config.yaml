@@ -58,10 +58,10 @@ datasets:
     repath: '/datasets/gsm/train.jsonl'
 
 params:
-  num-prompts: 100
+  num-prompts: 2000
   disable_chunked_prefill:
     max_num_seqs:
-      default: 32
+      default: 128
       step_num: 16
       min_step_num: 4
       bound: [4, 512]
@@ -72,7 +72,7 @@ params:
       min_step_num: null
       bound: [null, null]
     request-rate:
-      default: 4
+      default: 10
       step_num: 1
       min_step_num: 0.5
       bound: [1, 20]

@@ -23,7 +23,10 @@ class SSHManager:
         self.ssh.connect(self.ip, self.port, self.username, self.password)
         self.sftp = self.ssh.open_sftp()
         self.channel = self.ssh.invoke_shell()
-        self.channel.settimeout(3)
+        # 非阻塞模式
+        self.channel.setblocking(0)
+        # # 阻塞模式
+        # self.channel.settimeout(3)
         print(self.ssh_name, "ssh connect")
         # 连接命令的缓冲区立即读取
         self.read_until_prompt(self.final_prompt)
@@ -106,8 +109,9 @@ class SSHManager:
         print(self.ssh_name, command)
         self.channel.send(command + "\r")
 
-    # server 端一直运行，需要靠线程实现非阻塞式地读取缓冲区，否则缓冲区堵塞会造成错误
-    def start_recv_thread(self, max_duration=3600, buffer_size=4096, interval=0.1):
+    # server 端一直运行，需要靠线程实现非阻塞式地读取缓冲区，否则缓冲区堵塞会造成错误或者执行缓慢
+    # request-rate 较大时，server 端打印过快，interval 要设置非常小
+    def start_recv_thread(self, max_duration=3600, buffer_size=4096, interval=0):
         """ 开启新线程以持续接收数据 """
         thread_name = f"RecvThread-{len(self.threads) + 1}"
         thread = threading.Thread(target=self.recv_thread,
@@ -116,7 +120,7 @@ class SSHManager:
         thread.start()
         return thread_name
 
-    def recv_thread(self, thread_name, max_duration=3600, buffer_size=4096, interval=0.1):
+    def recv_thread(self, thread_name, max_duration=3600, buffer_size=4096, interval=0):
         """ 线程运行的函数，不断接收数据，防止缓冲区占满 """
         print(f"Thread {thread_name} started")
         start_time = time.time()
